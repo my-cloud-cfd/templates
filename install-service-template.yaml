@@ -12,14 +12,6 @@ script:
       local_file: ./docker-compose.yaml
       remote_file: ~/services/*{SERVICE_NAME}/docker-compose.yaml
       mode: 0o644
-  - type: http_post
-    name: Uploading settings
-    ssh: *{SSH_VM}
-    post_data:
-      url: ${SETTINGS_URL}/api/templates/post/
-      headers:
-        Content-Type: application/x-www-form-urlencoded
-      body: env=hetzner&name=*{SERVICE_NAME}&yaml=${./settings.yaml:url_encoded:raw}
 
   - type: execute
     ssh: *{SSH_VM}
