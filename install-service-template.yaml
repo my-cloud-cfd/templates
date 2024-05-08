@@ -1,0 +1,33 @@
+script:
+  - type: execute
+    ssh: *{SSH_VM}
+    commands:
+      - name: Creating Folder for *{SERVICE_NAME} on *{SSH_VM}
+        exec: mkdir $HOME/services/*{SERVICE_NAME}
+        ignore_error: true
+  - type: upload
+    ssh: *{SSH_VM}
+    name: Uploading docker-compose file
+    file:
+      local_file: ./docker-compose.yaml
+      remote_file: ~/services/*{SERVICE_NAME}/docker-compose.yaml
+      mode: 0o644
+  - type: http_post
+    name: Uploading settings
+    ssh: *{SSH_VM}
+    post_data:
+      url: ${SETTINGS_URL}/api/templates/post/
+      headers:
+        Content-Type: application/x-www-form-urlencoded
+      body: env=hetzner&name=*{SERVICE_NAME}&yaml=${./settings.yaml:url_encoded:raw}
+
+  - type: execute
+    ssh: *{SSH_VM}
+    commands:
+      - name: Pull Docker image
+        exec: docker-compose -f $HOME/services/*{SERVICE_NAME}/docker-compose.yaml pull
+        ignore_error: false
+
+      - name: Kick off *{SERVICE_NAME}
+        exec: docker-compose -f $HOME/services/*{SERVICE_NAME}/docker-compose.yaml up -d
+        ignore_error: false
